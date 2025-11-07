@@ -1,0 +1,40 @@
+name: 'Compile SCSS'
+description: 'Compiles SCSS files in place to CSS'
+
+inputs:
+  node-version:
+    description: 'Note.js version'
+    required: false
+    default: '20.x'
+  css-directory:
+    description: 'CSS directory path'
+    required: false
+    default: 'wwwroot/css'
+
+runs:
+  using: composite
+  steps:
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ inputs.node-version }}
+
+  - name: Instal Sass CLI
+    shell: bash
+    run: npm install -g sass
+
+  - name: Compile SCSS
+    shell: bash
+    run: |
+      find ${{ inputs.css-directory }} -name "*.scss" -type f | while read file; do
+          if [[ $(basename "$file") = _* ]]; then
+              echo "Skipping parital file: $file"
+              continue
+          fi
+          
+          filename=$(basename "$file" .scss)
+          echo "Compiling: $file"
+
+          sass "$file" "${{ inputs.css-directory }}/${filename}.css"
+          sass "$file" "${{ inputs.css-directory }}/${filename}.min.css" --style=compressed
+      done
