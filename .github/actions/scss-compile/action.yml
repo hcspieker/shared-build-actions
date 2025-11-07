@@ -19,7 +19,7 @@ runs:
     with:
       node-version: ${{ inputs.node-version }}
 
-  - name: Instal Sass CLI
+  - name: Install Sass CLI
     shell: bash
     run: npm install -g sass
 
