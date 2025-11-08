@@ -2,7 +2,7 @@ name: '.NET Deploy Web'
 description: 'Builds and tests .NET projects'
 
 inputs:
-  download-artifact-name:
+  artifact-name:
     description: 'Name of the published artifacts'
     required: false
     default: 'dotNetApp'

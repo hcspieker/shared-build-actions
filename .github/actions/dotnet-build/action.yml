@@ -30,7 +30,7 @@ inputs:
     description: 'Enable publishing the created artifacts'
     required: false
     default: 'false'
-  upload-artifact-name:
+  artifact-name:
     description: 'Name of the published artifacts'
     required: false
     default: 'dotNetApp'
