@@ -36,4 +36,4 @@ runs:
         username: ${{ inputs.ssh-username }}
         key: ${{ inputs.ssh-key }}
         source: "./${{ inputs.artifact-name }}/*"
-        target: "/${{ inputs.target-directory }}/next"
+        target: "${{ inputs.target-directory }}/next"
