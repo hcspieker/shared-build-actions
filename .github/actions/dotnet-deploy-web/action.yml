@@ -64,5 +64,8 @@ runs:
             echo "Switching next -> current"
             mv ${{ inputs.target-directory }}/next ${{ inputs.target-directory }}/current
 
+            echo "correcting permissions"
+            chown -R $(stat -c "%U:%G" ${{ inputs.target-directory }}) ${{ inputs.target-directory }}
+
             echo "Restarting kestrel service"
             sudo systemctl restart ${{ inputs.kestrel-service }}
