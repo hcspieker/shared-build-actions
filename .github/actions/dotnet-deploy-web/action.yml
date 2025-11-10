@@ -30,7 +30,7 @@ runs:
 
   - name: show content
     shell: bash
-    run: ls -R
+    run: find . -ls
 
 #  - name: Upload artifacts to temporary folder
 #    uses: appleboy/scp-action@v1
