@@ -9,6 +9,15 @@ inputs:
   target-directory:
     description: 'Path to the target directory of the application'
     required: true
+  ssh-host:
+    description: 'Ssh host'
+    required: true
+  ssh-username:
+    description: 'Ssh username'
+    required: true
+  ssh-key:
+    description: 'Ssh key'
+    required: true
 
 runs:
   using: composite
@@ -23,8 +32,8 @@ runs:
   - name: Upload artifacts to temporary folder
     uses: appleboy/scp-action@v1
     with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        host: ${{ inputs.ssh-host }}
+        username: ${{ inputs.ssh-username }}
+        key: ${{ inputs.ssh-key }}
         source: "./${{ inputs.artifact-name }}/*"
         target: "/{{ inputs.target-directory }}/next"
