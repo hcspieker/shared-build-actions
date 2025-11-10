@@ -18,6 +18,9 @@ inputs:
   ssh-key:
     description: 'Ssh key'
     required: true
+  kestrel-service:
+    description: 'Name of the kestrel service'
+    required: true
 
 runs:
   using: composite
@@ -57,3 +60,9 @@ runs:
 
             echo "Switching current -> old"
             mv ${{ inputs.target-directory }}/current ${{ inputs.target-directory }}/old
+
+            echo "Switching next -> current"
+            mv ${{ inputs.target-directory }}/next ${{ inputs.target-directory }}/current
+
+            echo "Restarting kestrel service"
+            sudo systemctl restart ${{ inputs.kestrel-service }}
