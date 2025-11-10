@@ -41,3 +41,19 @@ runs:
         source: "*"
         target: "${{ inputs.target-directory }}/next"
         rm: true
+
+  - name: Upload artifacts to temporary folder
+    uses: appleboy/ssh-action@v1
+    with:
+        host: ${{ inputs.ssh-host }}
+        username: ${{ inputs.ssh-username }}
+        key: ${{ inputs.ssh-key }}
+        script: |
+            # exit on any error
+            set -e
+
+            echo "Removing old versions"
+            rm -rf ${{ inputs.target-directory }}/old
+
+            echo "Switching current -> old"
+            mv ${{ inputs.target-directory }}/current ${{ inputs.target-directory }}/old
