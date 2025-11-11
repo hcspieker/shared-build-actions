@@ -25,6 +25,14 @@ inputs:
     description: 'Internal endpoint for health checks. Leave empty to skip checks'
     required: false
     default: ''
+  health-check-retry-delay:
+    description: 'Delay in seconds between retries of health checks (default: 10)'
+    required: false
+    default: '10'
+  health-check-retry-amount:
+    description: 'Amount of retries for health checks (default: 6)'
+    required: false
+    default: '6'
 
 runs:
   using: composite
@@ -76,8 +84,8 @@ runs:
             if [ -z "${{ inputs.internal-health-endpoint }}" ]; then
               echo "Skipping health check ('internal-health-endpoint' wasn't supplied)"              
             else
-              MAX_RETRIES=10
-              RETRY_DELAY=5
+              MAX_RETRIES=${{ inputs.health-check-retry-amount }}
+              RETRY_DELAY=${{ inputs.health-check-retry-delay }}
               
               for i in $(seq 1 $MAX_RETRIES); do
                 if curl -f ${{ inputs.internal-health-endpoint }} > /dev/null 2>&1; then
