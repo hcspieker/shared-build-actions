@@ -1,11 +1,11 @@
-# shared-build-actions
+# shared-build-components
 
 This repository contains shared build components which are used across my repositories to standardize and simplify build and deploy pipelines.
 
 This repository contains the following actions:
-- `dotnet-build` — build, test, publish .NET projects.
-- `dotnet-deploy-web` — deploy published web artifacts to a remote host via SSH.
-- `scss-compile` — compile SCSS files in-place to CSS and minified CSS.
+- `dotnet-build` â€” build, test, publish .NET projects.
+- `dotnet-deploy-web` â€” deploy published web artifacts to a remote host via SSH.
+- `scss-compile` â€” compile SCSS files in-place to CSS and minified CSS.
 
 Each action lives under `.github/actions/<action-name>` and is intended to be referenced from consumer workflows (pin to a tag/sha for production stability).
 
@@ -13,14 +13,14 @@ Each action lives under `.github/actions/<action-name>` and is intended to be re
 Description: Builds, tests and optionally publishes .NET projects and uploads the published output as an artifact.
 
 Inputs:
-- `dotnet-version` (optional, default: `9.0.x`) — .NET SDK version to install via `actions/setup-dotnet`.
-- `build-configuration` (optional, default: `Release`) — build configuration passed to `dotnet build`/`dotnet test`/`dotnet publish`.
-- `build-filter` (optional, default: `**/*.csproj`) — path or glob filter used for `dotnet restore` and `dotnet build`.
-- `test-filter` (optional, default: `**/*[Tt]ests/*.csproj`) — path or glob filter used for `dotnet test`.
-- `publish-filter` (optional, default: `**/*.csproj`) — path or glob filter used for `dotnet publish`.
-- `enable-tests` (optional, default: `true`) — if `'true'`, runs `dotnet test`.
-- `enable-publish` (optional, default: `false`) — if `'true'`, runs `dotnet publish` and uploads the `./publish` directory.
-- `artifact-name` (optional, default: `dotNetApp`) — name used with `actions/upload-artifact` when `enable-publish` is `'true'`.
+- `dotnet-version` (optional, default: `9.0.x`) â€” .NET SDK version to install via `actions/setup-dotnet`.
+- `build-configuration` (optional, default: `Release`) â€” build configuration passed to `dotnet build`/`dotnet test`/`dotnet publish`.
+- `build-filter` (optional, default: `**/*.csproj`) â€” path or glob filter used for `dotnet restore` and `dotnet build`.
+- `test-filter` (optional, default: `**/*[Tt]ests/*.csproj`) â€” path or glob filter used for `dotnet test`.
+- `publish-filter` (optional, default: `**/*.csproj`) â€” path or glob filter used for `dotnet publish`.
+- `enable-tests` (optional, default: `true`) â€” if `'true'`, runs `dotnet test`.
+- `enable-publish` (optional, default: `false`) â€” if `'true'`, runs `dotnet publish` and uploads the `./publish` directory.
+- `artifact-name` (optional, default: `dotNetApp`) â€” name used with `actions/upload-artifact` when `enable-publish` is `'true'`.
 
 Outputs / side-effects:
 - This action does not declare GitHub Action `outputs` in `action.yml`.
@@ -29,7 +29,7 @@ Outputs / side-effects:
 Example usage:
 ```yaml
   - name: Dotnet build
-    uses: hcspieker/shared-build-actions/.github/actions/dotnet-build@main
+    uses: hcspieker/shared-build-components/.github/actions/dotnet-build@main
     with:
       dotnet-version: '9.0.x'
       build-configuration: 'Release'
@@ -42,15 +42,15 @@ Example usage:
 Description: Downloads a published artifact (from `dotnet-build`) and deploys it to a remote host via `scp`/`ssh`. Performs an in-place "next -> current -> old" switch and can run a health check with automatic rollback.
 
 Inputs:
-- `artifact-name` (optional, default: `dotNetApp`) — name used to `download-artifact`.
-- `target-directory` (required) — remote path where app versions are stored; the action uploads into `<target-directory>/next` and rotates directories to `current`.
-- `ssh-host` (required) — SSH host or IP.
-- `ssh-username` (required) — SSH username.
-- `ssh-key` (required) — SSH private key (PEM) content; used by `appleboy/scp-action` and `appleboy/ssh-action`.
-- `kestrel-service` (required) — systemd service name to restart (used for Kestrel-hosted apps).
-- `internal-health-endpoint` (optional, default: `''`) — internal URL to perform health checks after deployment. Leave empty to skip health checks.
-- `health-check-retry-delay` (optional, default: `10`) — retry delay in seconds between health-check attempts.
-- `health-check-retry-amount` (optional, default: `6`) — number of health-check retry attempts.
+- `artifact-name` (optional, default: `dotNetApp`) â€” name used to `download-artifact`.
+- `target-directory` (required) â€” remote path where app versions are stored; the action uploads into `<target-directory>/next` and rotates directories to `current`.
+- `ssh-host` (required) â€” SSH host or IP.
+- `ssh-username` (required) â€” SSH username.
+- `ssh-key` (required) â€” SSH private key (PEM) content; used by `appleboy/scp-action` and `appleboy/ssh-action`.
+- `kestrel-service` (required) â€” systemd service name to restart (used for Kestrel-hosted apps).
+- `internal-health-endpoint` (optional, default: `''`) â€” internal URL to perform health checks after deployment. Leave empty to skip health checks.
+- `health-check-retry-delay` (optional, default: `10`) â€” retry delay in seconds between health-check attempts.
+- `health-check-retry-amount` (optional, default: `6`) â€” number of health-check retry attempts.
 
 Outputs / side-effects:
 - No declared `outputs` in `action.yml`.
@@ -59,7 +59,7 @@ Outputs / side-effects:
 Example usage:
 ```yaml
  - name: Deploy web artifact
-    uses: hcspieker/shared-build-actions/.github/actions/dotnet-deploy-web@main
+    uses: hcspieker/shared-build-components/.github/actions/dotnet-deploy-web@main
     with:
       artifact-name: 'my-app-artifact'
       target-directory: '/opt/myapp'
@@ -79,8 +79,8 @@ Security note: supply `ssh-key` via repository or org `Secrets` and avoid printi
 Description: Finds `.scss` files in the given directory and compiles them to `.css` and minified `.min.css` using the Sass CLI. Skips partial files whose names start with `_`.
 
 Inputs:
-- `node-version` (optional, default: `20.x`) — Node.js version installed via `actions/setup-node`.
-- `css-directory` (optional, default: `wwwroot/css`) — directory where `.scss` files are located and where compiled `.css` files will be written.
+- `node-version` (optional, default: `20.x`) â€” Node.js version installed via `actions/setup-node`.
+- `css-directory` (optional, default: `wwwroot/css`) â€” directory where `.scss` files are located and where compiled `.css` files will be written.
 
 Outputs / side-effects:
 - No declared `outputs` in `action.yml`.
@@ -89,7 +89,7 @@ Outputs / side-effects:
 Example usage:
 ```yaml
   - name: Compile SCSS
-    uses: hcspieker/shared-build-actions/.github/actions/scss-compile@main
+    uses: hcspieker/shared-build-components/.github/actions/scss-compile@main
     with:
       node-version: '20.x'
       css-directory: 'src/wwwroot/css'
