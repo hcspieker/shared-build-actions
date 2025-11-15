@@ -1,5 +1,5 @@
 name: '.NET Deploy Web'
-description: 'Builds and tests .NET projects'
+description: 'Deploys .NET projects'
 
 inputs:
   artifact-name:
