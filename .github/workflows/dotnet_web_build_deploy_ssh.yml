@@ -1,0 +1,149 @@
+name: Reusable Workflow to Build and Deploy .NET Web Applications via SSH
+
+on:
+  workflow_call:
+    inputs:
+      runner-name:
+        description: 'Name of the github action runner'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+
+      enable-scss-compile:
+        description: 'Enable SCSS compilation'
+        required: false
+        type: boolean
+        default: false
+      node-version:
+        description: 'Note.js version'
+        required: false
+        type: string
+        default: '20.x'
+      css-directory:
+        description: 'CSS directory path'
+        required: false
+        type: string
+        default: 'wwwroot/css'
+
+      dotnet-version:
+        description: '.NET version'
+        required: false
+        type: string
+        default: '9.0.x'
+      build-configuration:
+        description: 'Build configuration (e.g. Debug, Release)'
+        required: false
+        type: string
+        default: 'Release'
+      build-filter:
+        description: 'Build artifact (e.g. path to project / solution or filter (**/*.csproj)'
+        required: false
+        type: string
+        default: '**/*.csproj'
+
+      enable-tests:
+        description: 'Enable test execution'
+        required: false
+        type: string
+        default: 'true'
+      test-filter:
+        description: 'Build artifact (e.g. path to project / solution or filter (**/*.csproj)'
+        required: false
+        type: string
+        default: '**/*[Tt]ests/*.csproj'
+
+      publish-filter:
+        description: 'Artifact to be published'
+        required: false
+        type: string
+        default: '**/*.csproj'
+      enable-publish:
+        description: 'Enable publishing the created artifacts'
+        required: false
+        type: string
+        default: 'false'
+      artifact-name:
+        description: 'Name of the published artifacts'
+        required: false
+        type: string
+        default: 'dotNetApp'
+
+      environment-name:
+        description: 'Name of the environment'
+        required: true
+        type: string
+
+      deploy-target-directory:
+        description: 'Path to the target directory of the application'
+        required: true
+        type: string
+      kestrel-service:
+        description: 'Name of the kestrel service'
+        required: true
+        type: string
+      internal-health-endpoint:
+        description: 'Internal endpoint for health checks. Leave empty to skip checks'
+        required: false
+        type: string
+        default: ''
+      health-check-retry-delay:
+        description: 'Delay in seconds between retries of health checks (default: 10)'
+        required: false
+        type: string
+        default: '10'
+      health-check-retry-amount:
+        description: 'Amount of retries for health checks (default: 6)'
+        required: false
+        type: string
+        default: '6'
+    secrets:
+      SSH_HOST:
+        required: true
+      SSH_USERNAME:
+        required: true
+      SSH_KEY:
+        required: true
+ 
+jobs:
+  build:
+    runs-on: ${{ inputs.runner-name }}
+    steps:
+    - uses: actions/checkout@v4
+  
+    - name: Compile SCSS
+      uses: hcspieker/shared-build-components/.github/actions/scss-compile@v1.1.0
+      if: ${{ inputs.enable-scss-compile }}
+      with:
+        css-directory: ${{ inputs.css-directory }}
+
+    - name: Build dotnet projects
+      uses: hcspieker/shared-build-components/.github/actions/dotnet-build@v1.1.0
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+        build-configuration: ${{ inputs.build-configuration }}
+        build-filter: ${{ inputs.build-filter }}
+        test-filter: ${{ inputs.test-filter }}
+        publish-filter: ${{ inputs.publish-filter }}
+        enable-tests: ${{ inputs.enable-tests }}
+        enable-publish: ${{ inputs.enable-publish }}
+        artifact-name: ${{ inputs.artifact-name }}
+
+  deploy:
+    name: Deploy to spieker.codes
+    runs-on: ${{ inputs.runner-name }}
+    needs: build
+    environment: ${{ inputs.environment-name }}
+
+    steps:
+    - name: Deploy dotnet web
+      uses: hcspieker/shared-build-components/.github/actions/dotnet-deploy-web@v1.1.0
+      with:
+        artifact-name: ${{ inputs.artifact-name }}
+        target-directory: ${{ inputs.deploy-target-directory }}
+        ssh-host: ${{ secrets.SSH_HOST }}
+        ssh-username: ${{ secrets.SSH_USERNAME }}
+        ssh-key: ${{ secrets.SSH_KEY }}
+        kestrel-service: ${{ inputs.kestrel-service }}
+        internal-health-endpoint: ${{ inputs.internal-health-endpoint }}
+        health-check-retry-delay: ${{ inputs.health-check-retry-delay }}
+        health-check-retry-amount: ${{ inputs.health-check-retry-amount }}

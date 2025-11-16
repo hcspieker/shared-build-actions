@@ -14,6 +14,10 @@ inputs:
     description: 'Build artifact (e.g. path to project / solution or filter (**/*.csproj)'
     required: false
     default: '**/*.csproj'
+  enable-tests:
+    description: 'Enable test execution'
+    required: false
+    default: 'true'
   test-filter:
     description: 'Build artifact (e.g. path to project / solution or filter (**/*.csproj)'
     required: false
@@ -22,10 +26,6 @@ inputs:
     description: 'Artifact to be published'
     required: false
     default: '**/*.csproj'
-  enable-tests:
-    description: 'Enable test execution'
-    required: false
-    default: 'true'
   enable-publish:
     description: 'Enable publishing the created artifacts'
     required: false
