@@ -1,0 +1,126 @@
+name: Reusable Workflow to Build .NET Projects and Publish Artifacts to NuGet
+
+on:
+  workflow_call:
+    inputs:
+      runner-name:
+        description: 'Name of the github action runner'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+        
+      dotnet-version:
+        description: '.NET version'
+        required: false
+        type: string
+        default: '9.0.x'
+
+      build-filter:
+        description: 'Build artifact (e.g. path to project / solution or filter (**/*.csproj)'
+        required: false
+        type: string
+        default: '**/*.csproj'
+      build-configuration:
+        description: 'Build configuration (e.g. Debug, Release)'
+        required: false
+        type: string
+        default: 'Release'
+
+      enable-tests:
+        description: 'Enable test execution'
+        required: false
+        type: string
+        default: 'true'
+      test-filter:
+        description: 'Build artifact (e.g. path to project / solution or filter (**/*.csproj)'
+        required: false
+        type: string
+        default: '**/*[Tt]ests/*.csproj'
+
+      packages-dir:
+        description: 'Directory to store the created packages'
+        required: false
+        type: string
+        default: 'nuget_packages'
+      artifact-name:
+        description: 'Name of the published artifacts'
+        required: false
+        type: string
+        default: 'CreatedNuGetPackages'
+
+      environment-name:
+        description: 'Name of the environment'
+        required: true
+        type: string
+    secrets:
+      NUGET_USER:
+        required: true
+ 
+jobs:
+  build:    
+    runs-on: ${{ inputs.runner-name }}
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Extract version from tag
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        TAG=${GITHUB_REF#refs/tags/}
+        VERSION=${TAG#v}
+        echo "TAG=$TAG" >> $GITHUB_ENV
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Extracted TAG: $TAG"
+        echo "Extracted VERSION: $VERSION"
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Restore dependencies
+      shell: bash
+      run: dotnet restore ${{ inputs.build-filter }}
+
+    - name: Build
+      shell: bash
+      run: dotnet build ${{ inputs.build-filter }} --configuration ${{ inputs.build-configuration }} --no-restore /p:Version=${{ env.VERSION }} /p:FileVersion=${{ env.VERSION }} /p:InformationalVersion=${{ env.VERSION }}+sha.${GITHUB_SHA:0:7}
+
+    - name: Test
+      shell: bash
+      if: ${{ inputs.enable-tests == 'true' }}
+      run: dotnet test ${{ inputs.test-filter }} --configuration ${{ inputs.build-configuration }} --no-build --verbosity normal
+
+    - name: NuGet Pack
+      shell: bash
+      run: dotnet pack ${{ inputs.build-filter }} --configuration ${{ inputs.build-configuration }} --no-restore -o ${{ inputs.packages-dir }} /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:FileVersion=${{ env.VERSION }} /p:InformationalVersion=${{ env.VERSION }}+sha.${GITHUB_SHA:0:7}
+      
+    - name: Upload packages as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ./${{ inputs.packages-dir }}/
+        retention-days: 7
+
+  publish_nuget:
+    needs: build
+    runs-on: ${{ inputs.runner-name }}
+    environment: ${{ inputs.environment-name }}
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Download packages artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ./
+        
+    - name: NuGet login
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
+    - name: NuGet push
+      run: dotnet nuget push ./*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
